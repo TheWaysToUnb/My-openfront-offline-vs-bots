@@ -151,16 +151,40 @@ ctx.addEventListener("message", async (e: MessageEvent<MainThreadMessage>) => {
           message.clientID,
           mapLoader,
           gameUpdate,
-        ).then((gr) => {
-          sendMessage({
-            type: "initialized",
-            id: message.id,
-          } as InitializedMessage);
-          return gr;
-        });
+        )
+          .then((gr) => {
+            sendMessage({
+              type: "initialized",
+              id: message.id,
+            } as InitializedMessage);
+            return gr;
+          })
+          .catch((error: unknown) => {
+            console.error("Failed to initialize game runner:", error);
+            sendMessage({
+              type: "game_error",
+              error: {
+                errMsg:
+                  error instanceof Error
+                    ? error.message
+                    : "Failed to initialize game runner",
+                stack: error instanceof Error ? error.stack : undefined,
+              },
+            } as WorkerMessage);
+            throw error;
+          });
       } catch (error) {
         console.error("Failed to initialize game runner:", error);
-        throw error;
+        sendMessage({
+          type: "game_error",
+          error: {
+            errMsg:
+              error instanceof Error
+                ? error.message
+                : "Failed to initialize game runner",
+            stack: error instanceof Error ? error.stack : undefined,
+          },
+        } as WorkerMessage);
       }
       break;
 

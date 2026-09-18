@@ -28,6 +28,7 @@ async function createGameWorker(): Promise<Worker> {
 export class WorkerClient {
   private worker: Worker | null = null;
   private isInitialized = false;
+  private initializationFailure?: (error: Error) => void;
   private messageHandlers: Map<string, (message: WorkerMessage) => void>;
   private gameUpdateCallback?: (
     update: GameUpdateViewData | ErrorUpdate,
@@ -60,6 +61,13 @@ export class WorkerClient {
         if (this.gameUpdateCallback && message.error) {
           this.gameUpdateCallback(message.error);
         }
+        if (message.error?.errMsg && this.initializationFailure) {
+          const fail = this.initializationFailure;
+          this.initializationFailure = undefined;
+          fail(
+            new Error(`Worker initialization failed: ${message.error.errMsg}`),
+          );
+        }
         break;
 
       case "initialized":
@@ -90,6 +98,7 @@ export class WorkerClient {
       const fail = (error: Error) => {
         if (settled) return;
         settled = true;
+        this.initializationFailure = undefined;
         clearTimeout(timeout);
         this.messageHandlers.delete(messageId);
         reject(error);
@@ -99,11 +108,13 @@ export class WorkerClient {
         if (message.type === "initialized") {
           if (settled) return;
           settled = true;
+          this.initializationFailure = undefined;
           clearTimeout(timeout);
           this.isInitialized = true;
           resolve();
         }
       });
+      this.initializationFailure = fail;
 
       worker.addEventListener("error", (event) => {
         const detail = event.message || "Unknown worker error";
