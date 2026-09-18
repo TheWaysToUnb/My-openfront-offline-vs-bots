@@ -322,7 +322,7 @@ export default defineConfig(({ mode }) => {
       ],
     },
     root: "./",
-    base: "/",
+    base: "/My-openfront-offline-vs-bots/",
     publicDir: isProduction ? false : "resources",
 
     resolve: {
