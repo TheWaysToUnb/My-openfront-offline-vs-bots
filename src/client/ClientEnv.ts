@@ -337,9 +337,7 @@ export class ClientEnv {
   // GitHub Pages is a static client, so there is no server-rendered
   // BOOTSTRAP_CONFIG.siteHost. Use the production OpenFront site for
   // server-list discovery instead.
-  if (ClientEnv.get().gameEnv === "prod") {
-    return "openfront.io";
-  }
+  if (ClientEnv.get().gameEnv === GameEnv.Prod) return "openfront.io";
 
   return undefined;
 }
