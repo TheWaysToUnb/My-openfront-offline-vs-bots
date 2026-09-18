@@ -104,6 +104,15 @@ export function getCdnBase(): string {
   return globalThis.__CDN_BASE__ ?? "";
 }
 
+export function getWorkerCdnBase(): string {
+  const cdnBase = getCdnBase();
+  if (isAbsoluteUrl(cdnBase) || typeof window === "undefined") {
+    return cdnBase;
+  }
+
+  return new URL(cdnBase || "/", window.location.origin).toString();
+}
+
 export function assetUrl(path: string): string {
   return buildAssetUrl(path, getAssetManifest(), getCdnBase());
 }

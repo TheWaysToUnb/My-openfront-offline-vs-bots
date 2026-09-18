@@ -1,7 +1,31 @@
 import { describe, expect, test } from "vitest";
-import { buildAssetUrl, rewriteAssetsForCdn } from "../src/core/AssetUrls";
+import {
+  buildAssetUrl,
+  getWorkerCdnBase,
+  rewriteAssetsForCdn,
+} from "../src/core/AssetUrls";
 
 describe("AssetUrls", () => {
+  test("resolves a Pages-relative CDN base for worker fetches", () => {
+    const originalBootstrap = window.BOOTSTRAP_CONFIG;
+    window.BOOTSTRAP_CONFIG = { cdnBase: "/My-openfront-offline-vs-bots/" };
+
+    expect(getWorkerCdnBase()).toBe(
+      `${window.location.origin}/My-openfront-offline-vs-bots/`,
+    );
+
+    window.BOOTSTRAP_CONFIG = originalBootstrap;
+  });
+
+  test("preserves absolute worker CDN bases", () => {
+    const originalBootstrap = window.BOOTSTRAP_CONFIG;
+    window.BOOTSTRAP_CONFIG = { cdnBase: "https://cdn.example.com/" };
+
+    expect(getWorkerCdnBase()).toBe("https://cdn.example.com/");
+
+    window.BOOTSTRAP_CONFIG = originalBootstrap;
+  });
+
   test("returns hashed URLs for direct asset matches", () => {
     expect(
       buildAssetUrl("images/Favicon.svg", {
