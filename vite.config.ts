@@ -211,7 +211,7 @@ export default defineConfig(({ mode }) => {
   const assetManifest: AssetManifest = isProduction
     ? buildPublicAssetManifest(sourceDirs)
     : {};
-  const cdnBase = env.CDN_BASE ?? "";
+  const cdnBase = env.CDN_BASE ?? "/My-openfront-offline-vs-bots/";
   const htmlAssetData = {
     assetManifest: JSON.stringify(assetManifest),
     cdnBase: JSON.stringify(cdnBase),
