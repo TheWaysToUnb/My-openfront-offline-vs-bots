@@ -331,8 +331,18 @@ export class ClientEnv {
   // redirect target, whose shell always carries the freshest cluster map.
   // Absent for standalone deployments and desktop: no apex to bounce to.
   static siteHost(): string | undefined {
-    return ClientEnv.get().siteHost;
+  const configured = ClientEnv.get().siteHost;
+  if (configured) return configured;
+
+  // GitHub Pages is a static client, so there is no server-rendered
+  // BOOTSTRAP_CONFIG.siteHost. Use the production OpenFront site for
+  // server-list discovery instead.
+  if (ClientEnv.get().gameEnv === "prod") {
+    return "openfront.io";
   }
+
+  return undefined;
+}
   // Origin of the WEBSITE this page belongs to (scheme + host, no trailing
   // slash), for links that must leave the game and land on the site — the
   // desktop shell opening account settings in a browser, say.
@@ -362,14 +372,22 @@ export class ClientEnv {
   // but wrong in the way that surfaces as a connection failure the client
   // already handles, which beats refusing to build a URL at all.
   static serverWsBase(): string {
-    const picked = ClientEnv.pickedServer();
-    if (picked !== null) return `wss://${picked.host}`;
-    return deriveServerWsBase(
-      ClientEnv.serverHost(),
-      window.location.protocol,
-      window.location.host,
-    );
+  const picked = ClientEnv.pickedServer();
+
+  if (picked !== null) {
+    return `wss://${picked.host}`;
   }
+
+  const configured = ClientEnv.serverHost();
+
+  if (configured) {
+    return `wss://${configured}`;
+  }
+
+  // Static GitHub Pages has no serverHost. Online games should normally
+  // already have a server selected from the cluster list.
+  return "wss://openfront.io";
+}
   // Origin (scheme + host, no trailing slash) of the same game server's HTTP
   // API — the worker routes under `/api` (create_game, game/:id/exists,
   // game/:id/listing). Callers append the path, worker prefix included where
@@ -378,26 +396,38 @@ export class ClientEnv {
   // NOT the account/shop API: that is a separate service on api.<audience>,
   // reached via getApiBase(). Same same-origin fallback as serverWsBase.
   static serverHttpBase(): string {
-    const picked = ClientEnv.pickedServer();
-    if (picked !== null) return `https://${picked.host}`;
-    return deriveServerHttpBase(
-      ClientEnv.serverHost(),
-      window.location.protocol,
-      window.location.host,
-    );
+  const picked = ClientEnv.pickedServer();
+
+  if (picked !== null) {
+    return `https://${picked.host}`;
   }
+
+  const configured = ClientEnv.serverHost();
+
+  if (configured) {
+    return `https://${configured}`;
+  }
+
+  // Static GitHub Pages fallback.
+  return "https://openfront.io";
+}
   // Origin a link that LEAVES this client should point at — a lobby invite, a
   // game link, the domain the magic-link email comes back to. See
   // deriveShareOrigin. Compose a path of your own onto it
   // (`${shareOrigin()}${gamePath(id)}`); shareBase() is the variant that keeps
   // the current page's path, for a link that differs only in its #hash.
   static shareOrigin(): string {
-    return deriveShareOrigin(
-      shareBootstrap,
-      window.location.protocol,
-      window.location.origin,
-    );
+  if (window.location.hostname === "thewaystounb.github.io") {
+    return "https://thewaystounb.github.io/My-openfront-offline-vs-bots";
   }
+
+  return deriveShareOrigin(
+    shareBootstrap,
+    window.location.protocol,
+    window.location.origin,
+  );
+}
+  
   static shareBase(): string {
     return deriveShareBase(
       shareBootstrap,
