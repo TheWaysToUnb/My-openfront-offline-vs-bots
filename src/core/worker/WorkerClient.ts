@@ -80,12 +80,41 @@ export class WorkerClient {
 
     return new Promise((resolve, reject) => {
       const messageId = generateID();
+      let settled = false;
+      const timeout = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        this.messageHandlers.delete(messageId);
+        reject(new Error("Worker initialization timeout"));
+      }, 60000);
+      const fail = (error: Error) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        this.messageHandlers.delete(messageId);
+        reject(error);
+      };
 
       this.messageHandlers.set(messageId, (message) => {
         if (message.type === "initialized") {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timeout);
           this.isInitialized = true;
           resolve();
         }
+      });
+
+      worker.addEventListener("error", (event) => {
+        const detail = event.message || "Unknown worker error";
+        fail(new Error(`Worker initialization failed: ${detail}`));
+      });
+      worker.addEventListener("messageerror", () => {
+        fail(
+          new Error(
+            "Worker initialization failed: message could not be deserialized",
+          ),
+        );
       });
 
       worker.postMessage({
@@ -95,13 +124,6 @@ export class WorkerClient {
         clientID: this.clientID,
         cdnBase: getCdnBase(),
       });
-
-      setTimeout(() => {
-        if (!this.isInitialized) {
-          this.messageHandlers.delete(messageId);
-          reject(new Error("Worker initialization timeout"));
-        }
-      }, 60000);
     });
   }
 
