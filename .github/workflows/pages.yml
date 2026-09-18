@@ -32,6 +32,9 @@ jobs:
         run: npm ci
 
       - name: Build
+        env:
+          DOMAIN: openfront.io
+          API_DOMAIN: openfront.io
         run: npm run build-prod
 
       - name: Setup Pages
