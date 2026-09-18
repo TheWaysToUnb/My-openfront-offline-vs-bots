@@ -32,10 +32,13 @@ jobs:
         run: npm ci
 
       - name: Build
-        env:
-          DOMAIN: openfront.io
-          API_DOMAIN: openfront.io
-        run: npm run build-prod
+        run: |
+          npm run build-prod
+          DOMAIN="openfront.io" \
+          GIT_COMMIT="${GITHUB_SHA}" \
+          TURNSTILE_SITE_KEY="1x00000000000000000000AA" \
+          CDN_BASE="/My-openfront-offline-vs-bots/" \
+          npx tsx scripts/renderPagesHtml.ts
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
