@@ -35,6 +35,7 @@ jobs:
         run: |
           npm run build-prod
           DOMAIN="openfront.io" \
+          GAME_ENV="prod" \
           GIT_COMMIT="${GITHUB_SHA}" \
           TURNSTILE_SITE_KEY="1x00000000000000000000AA" \
           CDN_BASE="/My-openfront-offline-vs-bots/" \
