@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   buildAssetUrl,
   getWorkerCdnBase,
+  normalizeWorkerCdnBase,
   rewriteAssetsForCdn,
 } from "../src/core/AssetUrls";
 
@@ -24,6 +25,25 @@ describe("AssetUrls", () => {
     expect(getWorkerCdnBase()).toBe("https://cdn.example.com/");
 
     window.BOOTSTRAP_CONFIG = originalBootstrap;
+  });
+
+  test("normalizes Pages-relative CDN bases in worker-like globals", () => {
+    const originalLocation = self.location;
+    Object.defineProperty(self, "location", {
+      value: { origin: "https://example.test" },
+      configurable: true,
+    });
+
+    try {
+      expect(normalizeWorkerCdnBase("/My-openfront-offline-vs-bots/")).toBe(
+        "https://example.test/My-openfront-offline-vs-bots/",
+      );
+    } finally {
+      Object.defineProperty(self, "location", {
+        value: originalLocation,
+        configurable: true,
+      });
+    }
   });
 
   test("returns hashed URLs for direct asset matches", () => {

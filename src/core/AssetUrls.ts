@@ -104,13 +104,23 @@ export function getCdnBase(): string {
   return globalThis.__CDN_BASE__ ?? "";
 }
 
-export function getWorkerCdnBase(): string {
-  const cdnBase = getCdnBase();
-  if (isAbsoluteUrl(cdnBase) || typeof window === "undefined") {
+export function normalizeWorkerCdnBase(cdnBase: string): string {
+  if (isAbsoluteUrl(cdnBase)) {
     return cdnBase;
   }
 
-  return new URL(cdnBase || "/", window.location.origin).toString();
+  const base = cdnBase || "/";
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return new URL(base, window.location.origin).toString();
+  }
+  if (typeof self !== "undefined" && self.location?.origin) {
+    return new URL(base, self.location.origin).toString();
+  }
+  return cdnBase;
+}
+
+export function getWorkerCdnBase(): string {
+  return normalizeWorkerCdnBase(getCdnBase());
 }
 
 export function assetUrl(path: string): string {
