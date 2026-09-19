@@ -18,8 +18,6 @@ import { UserSettings } from "../core/game/UserSettings";
 import "./AccountModal";
 import "./AccountSettingsModal";
 import { syncAchievements } from "./AchievementSignal";
-import { adGatekeeper } from "./AdGatekeeper";
-import { loadAdmiral, onAdmiralMeasured } from "./Admiral";
 import { getUserMe, invalidateUserMe } from "./Api";
 import {
   getDesktopSessionState,
@@ -66,7 +64,6 @@ import {
 import { GameStartingModal } from "./GameStartingModal";
 import "./GameStatsModal";
 import { HelpModal } from "./HelpModal";
-import "./HomepagePromos";
 import { HostLobbyModal as HostPrivateLobbyModal } from "./HostLobbyModal";
 import { showInGameAlert, showInGameConfirm } from "./InGameModal";
 import "./InventoryModal";
@@ -172,31 +169,16 @@ import "./styles/modal/chat.css";
 declare global {
   interface Window {
     turnstile?: TurnstileApi;
+    // Entitlement signal: true when the player is neither ad-free (any shop
+    // purchase) nor on a channel that hides ads (CrazyGames, desktop shell).
+    // No ads are served any more; the ad-free players still get the
+    // FeaturedStream "hide for today" affordance, which reads this as false.
     adsEnabled: boolean;
     gtag?: (...args: any[]) => void;
     PageOS: {
       session: {
         newPageView: () => void;
       };
-    };
-    ramp: {
-      que: Array<() => void>;
-      passiveMode: boolean;
-      spaAddAds: (ads: Array<{ type: string; selectorId?: string }>) => void;
-      destroyUnits: (adType: string | string[]) => Promise<void>;
-      settings?: {
-        slots?: any;
-      };
-      spaNewPage: (url?: string) => void;
-      spaAds: (config?: {
-        ads?: Array<{ type: string; selectorId?: string }>;
-        countPageview?: boolean;
-        path?: string;
-      }) => void;
-      // Video ad methods
-      onPlayerReady: (() => void) | null;
-      addUnits: (units: Array<{ type: string }>) => Promise<void>;
-      displayUnits: () => void;
     };
     Bolt: {
       on: (unitType: string, event: string, callback: () => void) => void;
@@ -661,24 +643,11 @@ class Client {
       }
       const isAdFree =
         userMeResponse !== false && userMeResponse.player?.adfree === true;
+      // Retained as the ad-free entitlement signal only: it no longer gates
+      // any ad loading (there is none), but FeaturedStream uses it to offer
+      // ad-free players the extra "hide for today" control.
       window.adsEnabled =
         !isAdFree && !crazyGamesSDK.isOnCrazyGames() && !isDesktopShell();
-      // Ad-eligible users only: paid/adfree users must never load Admiral (its
-      // adblock popup fires autonomously once the payload runs). Start watching
-      // adblock state; once a blocker is ever detected the in-game ad is
-      // suppressed forever (persisted) — those users are highly ad-sensitive.
-      if (window.adsEnabled) {
-        loadAdmiral();
-        // Admiral's read is more reliable than our DOM bait, so use it as a
-        // fast initial signal. A blocker that whitelists this site still shows
-        // ads, so "blocked" means adblocking AND not whitelisted.
-        onAdmiralMeasured((res) => {
-          adGatekeeper.seed(
-            res.adblocking === true && res.whitelisted !== true,
-          );
-        });
-        adGatekeeper.start();
-      }
       // Snapshot in, dispatch and comparison inside — see
       // lapseShownAfterDispatch for why the snapshot cannot be read there.
       const lapseShown = lapseShownAfterDispatch(
@@ -1493,7 +1462,6 @@ class Client {
         "change-username-modal",
         "subscription-modal",
         "lang-selector",
-        "homepage-promos",
       ].forEach((tag) => {
         const modal = document.querySelector(tag) as HTMLElement & {
           close?: () => void;

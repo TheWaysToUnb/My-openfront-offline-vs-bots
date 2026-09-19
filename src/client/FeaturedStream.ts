@@ -155,7 +155,7 @@ export class FeaturedStream extends LitElement {
   private dragging = false;
   private dragMoved = false;
 
-  // Light DOM so Tailwind classes apply (matches HomepagePromos).
+  // Light DOM so Tailwind classes apply (matches MainLayout's other overlays).
   createRenderRoot() {
     return this;
   }

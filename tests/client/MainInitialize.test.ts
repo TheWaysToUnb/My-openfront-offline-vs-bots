@@ -76,24 +76,6 @@ vi.mock("../../src/client/BootInterrupts", () => ({
   runBootInterrupt: async () => {},
 }));
 
-// Injects a third-party script and polls; nothing under test needs it.
-vi.mock("../../src/client/Admiral", () => ({
-  loadAdmiral: vi.fn(),
-  onAdmiralMeasured: vi.fn(),
-}));
-
-// adGatekeeper.start() would install a poll interval and DOM bait.
-// HomepagePromos (also in Main's graph) reads canShowAds and nothing else.
-vi.mock("../../src/client/AdGatekeeper", () => ({
-  adGatekeeper: {
-    seed: vi.fn(),
-    start: vi.fn(),
-    stop: vi.fn(),
-    canShowAds: false,
-    whenClear: () => () => {},
-  },
-}));
-
 // Cuts the whole Pixi/WebGL/worker/audio in-game graph out of the import.
 // Transport/LocalServer only take the LobbyConfig *type* from this module,
 // so a value-only stub is safe.
