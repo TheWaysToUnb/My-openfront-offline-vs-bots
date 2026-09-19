@@ -975,6 +975,12 @@ export function currentPagePath(path: string): string {
  * lands on `latest` rather than back on the build they were leaving.
  */
 export function homeHref(): string {
+  // GitHub Pages serves the app under a subpath, so the plain root would
+  // leave the site entirely. "Leave to the menu" goes back to the pages'
+  // base URL instead (same special case as ClientEnv.shareOrigin()).
+  if (window.location.hostname === "thewaystounb.github.io") {
+    return "https://thewaystounb.github.io/My-openfront-offline-vs-bots/";
+  }
   const siteHost = ClientEnv.siteHost();
   if (siteHost !== undefined && window.location.host !== siteHost) {
     return `https://${siteHost}/`;
