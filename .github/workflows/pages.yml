@@ -32,9 +32,11 @@ jobs:
         run: npm ci
 
       - name: Build
+        env:
+          VITE_SERVER_HOST: "my-openfront-offline-vs-bots.onrender.com"
         run: |
           npm run build-prod
-          DOMAIN="openfront.io" \
+          DOMAIN="onrender.com" \
           GAME_ENV="prod" \
           GIT_COMMIT="${GITHUB_SHA}" \
           TURNSTILE_SITE_KEY="1x00000000000000000000AA" \

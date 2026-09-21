@@ -39,6 +39,14 @@ export class NoServerError extends Error {
   }
 }
 
+// REMOVE THIS LINE:
+// const RENDER_BACKEND_HOST = import.meta.env.VITE_SERVER_HOST || "https://my-openfront-offline-vs-bots.onrender.com/";
+
+// REPLACE WITH THIS (Extract plain hostname without protocol or trailing slashes):
+const RENDER_BACKEND_HOST = (import.meta.env.VITE_SERVER_HOST || "my-openfront-offline-vs-bots.onrender.com")
+  .replace(/^https?:\/\//, "")
+  .replace(/\/$/, "");
+
 export class ClientEnv {
   private static values: ClientEnvValues | null = null;
   private static publicKey: JWK | null = null;
@@ -370,22 +378,21 @@ export class ClientEnv {
   // but wrong in the way that surfaces as a connection failure the client
   // already handles, which beats refusing to build a URL at all.
   static serverWsBase(): string {
-  const picked = ClientEnv.pickedServer();
+    const picked = ClientEnv.pickedServer();
 
-  if (picked !== null) {
-    return `wss://${picked.host}`;
+    if (picked !== null) {
+      return `wss://${picked.host}`;
+    }
+
+    const configured = ClientEnv.serverHost();
+
+    if (configured) {
+      return `wss://${configured}`;
+    }
+
+    // Default to your Render WebSocket server instead of openfront.io
+    return `wss://${RENDER_BACKEND_HOST}`;
   }
-
-  const configured = ClientEnv.serverHost();
-
-  if (configured) {
-    return `wss://${configured}`;
-  }
-
-  // Static GitHub Pages has no serverHost. Online games should normally
-  // already have a server selected from the cluster list.
-  return "wss://openfront.io";
-}
   // Origin (scheme + host, no trailing slash) of the same game server's HTTP
   // API — the worker routes under `/api` (create_game, game/:id/exists,
   // game/:id/listing). Callers append the path, worker prefix included where
@@ -394,21 +401,21 @@ export class ClientEnv {
   // NOT the account/shop API: that is a separate service on api.<audience>,
   // reached via getApiBase(). Same same-origin fallback as serverWsBase.
   static serverHttpBase(): string {
-  const picked = ClientEnv.pickedServer();
+    const picked = ClientEnv.pickedServer();
 
-  if (picked !== null) {
-    return `https://${picked.host}`;
+    if (picked !== null) {
+      return `https://${picked.host}`;
+    }
+
+    const configured = ClientEnv.serverHost();
+
+    if (configured) {
+      return `https://${configured}`;
+    }
+
+    // Default to your Render HTTP server instead of openfront.io
+    return `https://${RENDER_BACKEND_HOST}`;
   }
-
-  const configured = ClientEnv.serverHost();
-
-  if (configured) {
-    return `https://${configured}`;
-  }
-
-  // Static GitHub Pages fallback.
-  return "https://openfront.io";
-}
   // Origin a link that LEAVES this client should point at — a lobby invite, a
   // game link, the domain the magic-link email comes back to. See
   // deriveShareOrigin. Compose a path of your own onto it
