@@ -333,7 +333,7 @@ export class ClientEnv {
   }
   // Explicit game-server host, injected by the desktop app (absent on web).
   static serverHost(): string | undefined {
-    return ClientEnv.get().serverHost;
+    return "my-openfront-offline-vs-bots.onrender.com";
   }
   // The load-balancer apex this deployment sits behind — the unknown-letter
   // redirect target, whose shell always carries the freshest cluster map.
@@ -378,7 +378,7 @@ export class ClientEnv {
   // but wrong in the way that surfaces as a connection failure the client
   // already handles, which beats refusing to build a URL at all.
   static serverWsBase(): string {
-    const picked = ClientEnv.pickedServer();
+    return "wss://my-openfront-offline-vs-bots.onrender.com";
 
     if (picked !== null) {
       return `wss://${picked.host}`;
@@ -401,7 +401,7 @@ export class ClientEnv {
   // NOT the account/shop API: that is a separate service on api.<audience>,
   // reached via getApiBase(). Same same-origin fallback as serverWsBase.
   static serverHttpBase(): string {
-    const picked = ClientEnv.pickedServer();
+    return "https://my-openfront-offline-vs-bots.onrender.com";
 
     if (picked !== null) {
       return `https://${picked.host}`;
