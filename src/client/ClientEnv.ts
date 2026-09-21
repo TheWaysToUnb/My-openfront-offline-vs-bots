@@ -21,9 +21,7 @@ export class NoServerError extends Error {
 }
 
 // Render Backend Fallback Host (sanitized without protocol or trailing slash)
-const RENDER_BACKEND_HOST = (import.meta.env.VITE_SERVER_HOST || "my-openfront-offline-vs-bots.onrender.com")
-  .replace(/^https?:\/\//, "")
-  .replace(/\/$/, "");
+const RENDER_BACKEND_HOST = "my-openfront-offline-vs-bots.onrender.com";
 
 export class ClientEnv {
   private static values: ClientEnvValues | null = null;
