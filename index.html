@@ -78,6 +78,34 @@
       i.e. a blank window. Guarding an existing one is safe — the shell supplies
       a value and the line still emits.
     -->
+
+    <script>
+  // Simple on-screen logger for devices without DevTools
+  (function () {
+    const logBox = document.createElement('div');
+    logBox.style.cssText = 'position:fixed;bottom:0;left:0;right:0;height:150px;background:rgba(0,0,0,0.85);color:#00ff00;font-family:monospace;font-size:11px;overflow-y:auto;z-index:99999;padding:8px;pointer-events:none;';
+    
+    function appendLog(type, msg) {
+      const line = document.createElement('div');
+      line.textContent = `[${type}] ${msg}`;
+      if (type === 'ERROR') line.style.color = '#ff5555';
+      logBox.appendChild(line);
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    window.addEventListener('load', () => document.body.appendChild(logBox));
+    
+    // Intercept console.error and uncaught errors
+    const origError = console.error;
+    console.error = function (...args) {
+      appendLog('ERROR', args.join(' '));
+      origError.apply(console, args);
+    };
+
+    window.addEventListener('error', (e) => appendLog('ERROR', e.message));
+    window.addEventListener('unhandledrejection', (e) => appendLog('ERROR', e.reason));
+  })();
+</script>
     <script>
       window.BOOTSTRAP_CONFIG = {
         gitCommit: <%- gitCommit %>,
