@@ -33,6 +33,7 @@ jobs:
 
       - name: Build
         env:
+          # Tell Vite where your Render backend lives (use your actual Render hostname)
           VITE_SERVER_HOST: "my-openfront-offline-vs-bots.onrender.com"
         run: |
           npm run build-prod
